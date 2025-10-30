@@ -33,6 +33,12 @@ function App() {
     }
   }
 
+  const handleExport = async () => {
+    // Use a simple timestamped filename
+    const ts = new Date().toISOString().replace(/[:.]/g, '-')
+    await canvasRef.current?.exportAsPng?.(`json-tree-${ts}.png`)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
@@ -60,6 +66,9 @@ function App() {
                 </button>
                 <button onClick={() => canvasRef.current?.zoomIn?.()} className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50">+
                 </button>
+                <button onClick={handleExport} className="rounded-md bg-indigo-600 text-white px-3 py-1.5 text-sm font-medium shadow hover:bg-indigo-700 transition">
+                  Export PNG
+                </button>
               </div>
             </div>
             <TreeCanvas ref={canvasRef} data={data} highlightedId={highlightedId} />
@@ -79,7 +88,7 @@ function normalizePath(input) {
   if (!s) return ''
   if (!s.startsWith('$')) s = `$${s}`
   // Remove accidental double dots
-  s = s.replace(/\.\.+/g, '.')
+  s = s.replace(/\.+/g, '.')
   // Remove trailing dots
   s = s.replace(/\.$/, '')
   return s

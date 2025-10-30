@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useCallback } from 'react'
+import React, { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useCallback, useRef } from 'react'
 import ReactFlow, { Background, Controls, useReactFlow } from 'reactflow'
 import 'reactflow/dist/style.css'
+import { toPng } from 'html-to-image'
 
 // Utility to build nodes/edges with simple tree layout
 function buildGraph(data) {
@@ -116,6 +117,7 @@ const TreeCanvas = forwardRef(function TreeCanvas({ data, highlightedId }, ref) 
   const graph = useMemo(() => (data ? buildGraph(data) : { nodes: [], edges: [], pathToId: {} }), [data])
   const [rfInstance, setRfInstance] = useState(null)
   const focus = useFitToNode()
+  const wrapperRef = useRef(null)
 
   useEffect(() => {
     if (rfInstance) {
@@ -133,11 +135,25 @@ const TreeCanvas = forwardRef(function TreeCanvas({ data, highlightedId }, ref) 
     getPathMap: () => graph.pathToId,
     zoomIn: () => rfInstance && rfInstance.zoomIn(),
     zoomOut: () => rfInstance && rfInstance.zoomOut(),
-    fitAll: () => rfInstance && rfInstance.fitView({ padding: 0.2 })
+    fitAll: () => rfInstance && rfInstance.fitView({ padding: 0.2 }),
+    exportAsPng: async (filename = 'json-tree.png') => {
+      if (!wrapperRef.current) return null
+      const dataUrl = await toPng(wrapperRef.current, {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: { width: `${wrapperRef.current.clientWidth}px`, height: `${wrapperRef.current.clientHeight}px` }
+      })
+      const link = document.createElement('a')
+      link.download = filename
+      link.href = dataUrl
+      link.click()
+      return dataUrl
+    }
   }))
 
   return (
-    <div className="h-[520px] w-full rounded-xl border overflow-hidden bg-white">
+    <div ref={wrapperRef} className="h-[520px] w-full rounded-xl border overflow-hidden bg-white">
       <ReactFlow
         nodes={graph.nodes.map((n) => ({
           ...n,
