@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const sample = {
   user: {
@@ -28,6 +28,17 @@ export default function JsonInput({ onValidJson }) {
     }
   }
 
+  // Auto-visualize initial sample so users immediately see the graph
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(text)
+      onValidJson(parsed, text)
+    } catch (_) {
+      // ignore; user can fix JSON and click Visualize
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <div className="w-full grid grid-cols-1 gap-3">
       <label className="text-sm font-medium text-gray-700">JSON Input</label>
@@ -51,8 +62,12 @@ export default function JsonInput({ onValidJson }) {
         </button>
         <button
           onClick={() => {
-            setText(JSON.stringify(sample, null, 2))
+            const s = JSON.stringify(sample, null, 2)
+            setText(s)
             setError('')
+            try {
+              onValidJson(sample, s)
+            } catch (_) {}
           }}
           className="inline-flex items-center justify-center rounded-md bg-gray-200 px-3 py-2 text-gray-800 font-medium hover:bg-gray-300 transition"
         >
